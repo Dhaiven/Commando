@@ -71,19 +71,16 @@ abstract class BaseCommand extends Command implements IArgumentable, IRunnable, 
 
 	/** @var BaseConstraint[] */
 	private array $constraints = [];
-
-	protected Plugin $plugin;
 	
 	/**
 	 * @param string[] $aliases
 	 */
 	public function __construct(
-		Plugin $plugin,
+		protected readonly Plugin $plugin,
 		string $name,
 		Translatable|string $description = "",
 		array $aliases = []
 	) {
-		$this->plugin = $plugin;
 		parent::__construct($name, $description, null, $aliases);
 
 		$this->prepare();
@@ -91,7 +88,7 @@ abstract class BaseCommand extends Command implements IArgumentable, IRunnable, 
 		$this->usageMessage = $this->generateUsageMessage();
 	}
 
-	public function getOwningPlugin(): Plugin {
+	final public function getOwningPlugin(): Plugin {
 		return $this->plugin;
 	}
 
@@ -100,8 +97,7 @@ abstract class BaseCommand extends Command implements IArgumentable, IRunnable, 
 		if(!$this->testPermission($sender)){
 			return;
 		}
-		/** @var BaseCommand|BaseSubCommand $cmd */
-		$cmd = $this;
+
 		$passArgs = [];
 		if(count($args) > 0){
 			if(isset($this->subCommands[($label = $args[0])])){
@@ -110,24 +106,24 @@ abstract class BaseCommand extends Command implements IArgumentable, IRunnable, 
 				return;
 			}
 
-			$passArgs = $this->attemptArgumentParsing($cmd, $args);
+			$passArgs = $this->attemptArgumentParsing($args);
 		} elseif($this->hasRequiredArguments()){
 			$this->sendError(self::ERR_INSUFFICIENT_ARGUMENTS);
 			return;
 		}
 		if($passArgs !== null) {
-			foreach ($cmd->getConstraints() as $constraint){
+			foreach ($this->getConstraints() as $constraint){
 				if(!$constraint->test($sender, $commandLabel, $passArgs)){
 					$constraint->onFailure($sender, $commandLabel, $passArgs);
 					return;
 				}
 			}
-			$cmd->onRun($sender, $commandLabel, $passArgs);
+			$this->onRun($sender, $commandLabel, $passArgs);
 		}
 	}
 	
-	private function attemptArgumentParsing(ArgumentableTrait $ctx, array $args): ?array {
-		$dat = $ctx->parseArguments($args, $this->currentSender);
+	private function attemptArgumentParsing(array $args): ?array {
+		$dat = $this->parseArguments($args, $this->currentSender);
 		if(!empty(($errors = $dat["errors"]))) {
 			foreach($errors as $error) {
 				$this->sendError($error["code"], $error["data"]);
@@ -170,8 +166,7 @@ abstract class BaseCommand extends Command implements IArgumentable, IRunnable, 
 	public function registerSubCommand(BaseSubCommand $subCommand): void {
 		$keys = $subCommand->getAliases();
 		array_unshift($keys, $subCommand->getName());
-		$keys = array_unique($keys);
-		foreach($keys as $key) {
+		foreach(array_unique($keys) as $key) {
 			if(!isset($this->subCommands[$key])) {
 				$subCommand->setParent($this);
 				$this->subCommands[$key] = $subCommand;

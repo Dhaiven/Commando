@@ -38,7 +38,7 @@ abstract class BaseArgument {
 	protected CommandParameter $parameterData;
 
 	public function __construct(
-		protected string $name,
+		protected readonly string $name,
 		protected bool $optional = false
 	) {
 		$this->parameterData = new CommandParameter();
@@ -54,7 +54,7 @@ abstract class BaseArgument {
 
 	abstract public function parse(string $argument, CommandSender $sender): mixed;
 
-	public function getName(): string {
+	final public function getName(): string {
 		return $this->name;
 	}
 
