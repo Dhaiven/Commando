@@ -47,15 +47,10 @@ class SoftEnumStore {
 	}
 
 	public static function broadcastSoftEnum(CommandEnum $enum, int $type): void {
-		$pk = new UpdateSoftEnumPacket();
-		$pk->enumName = $enum->getName();
-		$pk->values = $enum->getValues();
-		$pk->type = $type;
-		self::broadcastPacket($pk);
+		self::broadcastPacket(UpdateSoftEnumPacket::create($enum->getName(), $enum->getValues(), $type));
 	}
 
 	private static function broadcastPacket(ClientboundPacket $pk): void {
-		$sv = Server::getInstance();
-		NetworkBroadcastUtils::broadcastPackets($sv->getOnlinePlayers(), [$pk]);
+		NetworkBroadcastUtils::broadcastPackets(Server::getInstance()->getOnlinePlayers(), [$pk]);
 	}
 }

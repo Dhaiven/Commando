@@ -41,7 +41,7 @@ abstract class BaseConstraint {
 	 */
 	public function __construct(protected IRunnable $context) { }
 
-	public function getContext(): IRunnable {
+	final public function getContext(): IRunnable {
 		return $this->context;
 	}
 

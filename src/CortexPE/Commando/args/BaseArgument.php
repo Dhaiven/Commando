@@ -30,22 +30,17 @@ declare(strict_types=1);
 namespace CortexPE\Commando\args;
 
 use pocketmine\command\CommandSender;
-use pocketmine\network\mcpe\protocol\AvailableCommandsPacket;
 use pocketmine\network\mcpe\protocol\types\command\CommandParameter;
 
 abstract class BaseArgument {
 
-	protected CommandParameter $parameterData;
+	protected readonly CommandParameter $parameterData;
 
 	public function __construct(
 		protected readonly string $name,
 		protected bool $optional = false
 	) {
-		$this->parameterData = new CommandParameter();
-		$this->parameterData->paramName = $name;
-		$this->parameterData->paramType = AvailableCommandsPacket::ARG_FLAG_VALID;
-		$this->parameterData->paramType |= $this->getNetworkType();
-		$this->parameterData->isOptional = $this->isOptional();
+		$this->parameterData = CommandParameter::standard($name, $this->getNetworkType(), 0, $optional);
 	}
 
 	abstract public function getNetworkType(): int;

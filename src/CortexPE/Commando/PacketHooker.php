@@ -42,7 +42,6 @@ use pocketmine\network\mcpe\protocol\types\command\CommandEnum;
 use pocketmine\network\mcpe\protocol\types\command\CommandOverload;
 use pocketmine\network\mcpe\protocol\types\command\CommandParameter;
 use pocketmine\plugin\Plugin;
-use pocketmine\Server;
 use function array_map;
 use function array_product;
 use function count;
@@ -67,8 +66,9 @@ class PacketHooker implements Listener {
 		$interceptor->interceptOutgoing(function(AvailableCommandsPacket $pk, NetworkSession $target): bool {
 			if(self::$isIntercepting)return true;
 			$p = $target->getPlayer();
+			$commandMap = $p->getServer()->getCommandMap();
 			foreach($pk->commandData as $commandName => $commandData) {
-				$cmd = Server::getInstance()->getCommandMap()->getCommand($commandName);
+				$cmd = $commandMap->getCommand($commandName);
 				if($cmd instanceof BaseCommand) {
 					foreach($cmd->getConstraints() as $constraint){
 						if(!$constraint->isVisibleTo($p)){
@@ -103,11 +103,7 @@ class PacketHooker implements Listener {
 					continue 2;
 				}
 			}
-			$scParam = new CommandParameter();
-			$scParam->paramName = $label;
-			$scParam->paramType = AvailableCommandsPacket::ARG_FLAG_VALID | AvailableCommandsPacket::ARG_FLAG_ENUM;
-			$scParam->isOptional = false;
-			$scParam->enum = new CommandEnum($label, [$label]);
+			$scParam = CommandParameter::enum($label, new CommandEnum($label, [$label]), 0);
 
 			$overloadList = self::generateOverloads($cs, $subCommand);
 			if(!empty($overloadList)){

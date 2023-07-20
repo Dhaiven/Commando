@@ -34,6 +34,7 @@ use pocketmine\network\mcpe\protocol\AvailableCommandsPacket;
 use function preg_match;
 
 class IntegerArgument extends BaseArgument {
+	
 	public function getNetworkType(): int {
 		return AvailableCommandsPacket::ARG_TYPE_INT;
 	}
